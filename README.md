@@ -1,5 +1,5 @@
-# VirusSimulationR
-Interactive group simulation activity for viral spread in R.
+# CancerSimulationR
+Interactive simulation activity for cancer progression and evolution.
 
 # Navigation
 [Installing CancerSimulationR](#install)  
