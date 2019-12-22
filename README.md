@@ -24,7 +24,7 @@ install.packages("devtools")
 library(devtools)
 ```
 
-VirusSimulationR package depends on several packages, which can be installed using the below commands:
+CancerSimulationR package depends on several packages, which can be installed using the below commands:
 
 ```
 install.packages("RColorBrewer") 
@@ -51,7 +51,7 @@ To quickly update your CancerSimulationR R package up and get the latest version
 
 1. Open R studio and load devtools using `library(devtools)`.
 2. Type the following into R studio: `install_github(repo = "mesako/CancerSimulationR")`.
-3. Load VirusSimulationR using `library(CancerSimulationR)`.
+3. Load CancerSimulationR using `library(CancerSimulationR)`.
 
 If the above commands run without error, you should have the latest version of CancerSimulationR.
 
