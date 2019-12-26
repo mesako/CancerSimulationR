@@ -1,5 +1,5 @@
 
-MarkDeadCells <- function(cell.states, current.map) {
+MarkDeadCells <- function(cell.states, current.map, cell.divisions, cell.mut.rate) {
   updated.map <- current.map
   dead.ind <- which(`dim<-`(grepl(cell.states, pattern = "F"),
                             dim(cell.states)), arr.ind = TRUE)
@@ -10,25 +10,39 @@ MarkDeadCells <- function(cell.states, current.map) {
       updated.map$data[this.ind, "value"] <- "None"
     }
     cell.states[dead.ind] <- NA
+    cell.divisions[dead.ind] <- NA
+    cell.mut.rate[dead.ind] <- 0
   }
-  return(list(updated.map, cell.states))
+  return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
-RunBaselineCellActions <- function(current.map, cell.states, cell.divisions, max.divisions) {
-  results <- MarkDeadCells(cell.states, current.map)
-  current.map <- results[[1]]
-  cell.states <- results[[2]]
-  results <- RunCellDivision(current.map, cell.states, cell.divisions, max.divisions)
+RunBaselineCellActions <- function(current.map, cell.states, cell.divisions,
+                                   max.divisions, cell.mut.rate) {
+  results <- MarkDeadCells(cell.states, current.map, cell.divisions, cell.mut.rate)
   current.map <- results[[1]]
   cell.states <- results[[2]]
   cell.divisions <- results[[3]]
-  results <- CheckEnergyNeed(current.map, cell.states)
+  cell.mut.rate <- results[[4]]
+  results <- RunCellDivision(current.map, cell.states, cell.divisions,
+                             max.divisions, cell.mut.rate)
   current.map <- results[[1]]
   cell.states <- results[[2]]
-  return(list(current.map, cell.states, cell.divisions))
+  cell.divisions <- results[[3]]
+  cell.mut.rate <- results[[4]]
+  results <- CheckEnergyNeed(current.map, cell.states, cell.divisions, cell.mut.rate)
+  current.map <- results[[1]]
+  cell.states <- results[[2]]
+  cell.divisions <- results[[3]]
+  cell.mut.rate <- results[[4]]
+  results <- RunCellMove(current.map, cell.states, cell.divisions, cell.mut.rate)
+  current.map <- results[[1]]
+  cell.states <- results[[2]]
+  cell.divisions <- results[[3]]
+  cell.mut.rate <- results[[4]]
+  return(list(current.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
-CheckEnergyNeed <- function(current.map, cell.states) {
+CheckEnergyNeed <- function(current.map, cell.states, cell.divisions, cell.mut.rate) {
   updated.map <- current.map
   blood.ind <- current.map$data$id[current.map$data$value == "Blood"]
   blood.ind.num <- as.numeric(as.character(blood.ind))
@@ -49,9 +63,9 @@ CheckEnergyNeed <- function(current.map, cell.states) {
   all.cells <- which(current.map$data$value == "Cell")
   remove.candidates <- intersect(non.neighbors, all.cells)
   energy.ind1 <- which(`dim<-`(grepl(cell.states, pattern = mutation.encoding$metabolic),
-                              dim(cell.states)), arr.ind = TRUE)
+                               dim(cell.states)), arr.ind = TRUE)
   energy.ind2 <- which(`dim<-`(grepl(cell.states, pattern = mutation.encoding$angio),
-                              dim(cell.states)), arr.ind = TRUE)
+                               dim(cell.states)), arr.ind = TRUE)
   energy.ind <- rbind(energy.ind1, energy.ind2)
   remove.candidates <- current.map$data$id[remove.candidates]
   if (length(energy.ind) > 0) {
@@ -63,6 +77,8 @@ CheckEnergyNeed <- function(current.map, cell.states) {
   if (length(remove.candidates) > 0) {
     num.to.remove <- round(length(remove.candidates) * 0.2)
     to.remove <- sample(remove.candidates, num.to.remove,  replace = FALSE)
+    # print("to.remove energy need")
+    # print(to.remove)
     remove.ind <- which(updated.map$data[, "id"] %in% to.remove)
     updated.map$data[remove.ind, "value"] <- "None"
     for (i in 1:length(to.remove)) {
@@ -71,9 +87,11 @@ CheckEnergyNeed <- function(current.map, cell.states) {
       this.ind <- unlist(strsplit(this.ind, split = "\\."))
       this.ind <- as.numeric(this.ind)
       cell.states[this.ind[1], this.ind[2]] <- NA
+      cell.divisions[this.ind[1], this.ind[2]] <- NA
+      cell.mut.rate[this.ind[1], this.ind[2]] <- 0
     }
   }
-  return(list(updated.map, cell.states))
+  return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
 ChangeCellMutationRate <- function(cell.mut.rate, which.cell.mut) {
@@ -101,7 +119,6 @@ FindNeighborCell <- function(current.map, cell.coord) {
   return(possible.options)
 }
 
-
 ReturnEmptySpot <- function(current.map, possible.options) {
   find.ind <- as.character(current.map$data$id) %in% possible.options
   find.ind <- which(find.ind == TRUE)
@@ -111,7 +128,7 @@ ReturnEmptySpot <- function(current.map, possible.options) {
   return(match.ind)
 }
 
-RunCellDivision <- function(current.map, cell.states, cell.divisions, max.divisions) {
+RunCellDivision <- function(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate) {
   extract.dim <- as.numeric(current.map$data$id)
   extract.dim <- floor(max(extract.dim))
   temp1 <- matrix(current.map$data$id, nrow = extract.dim, byrow = TRUE)
@@ -125,6 +142,17 @@ RunCellDivision <- function(current.map, cell.states, cell.divisions, max.divisi
     for (i in 1:nrow(cellcycle)) {
       this.row <- cellcycle[i, ]
       temp <- cell.states[this.row[1], this.row[2]]
+      if (is.na(cell.divisions[this.row[1], this.row[2]])) {
+        cell.coord <- paste(this.row[1], this.row[2], sep = ".")
+        print("current.map$data$value[current.map$data$id == 'cell.coord']")
+        print(current.map$data$value[current.map$data$id == "cell.coord"])
+        print("cell.states")
+        print(cell.states)
+        print("this.row")
+        print(this.row)
+        print(cell.divisions[this.row[1], this.row[2]])
+        stop("ERROR")
+      }
       if (cell.divisions[this.row[1], this.row[2]] < max.divisions | grepl(temp, pattern = mutation.encoding$telomerase)) {
         num.div <- 1
         if (grepl(temp, pattern = mutation.encoding$growthact)) {
@@ -135,16 +163,19 @@ RunCellDivision <- function(current.map, cell.states, cell.divisions, max.divisi
       }
       cell.divisions[this.row[1], this.row[2]] <- cell.divisions[this.row[1], this.row[2]] + num.div
       cell.coord <- paste(this.row[1], this.row[2], sep = ".")
-      results <- MakeNewCells(updated.map, cell.states, cell.divisions, cell.coord, num.div)
+      results <- MakeNewCells(updated.map, cell.states, cell.divisions,
+                              cell.mut.rate, cell.coord, num.div)
       updated.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
+      cell.mut.rate <- results[[4]]
     }
   }
-  return(list(updated.map, cell.states, cell.divisions))
+  return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
-MakeNewCells <- function(current.map, cell.states, cell.divisions, cell.coord, num.div) {
+MakeNewCells <- function(current.map, cell.states, cell.divisions,
+                         cell.mut.rate, cell.coord, num.div) {
   updated.map <- current.map
   possible.options <- FindNeighborCell(current.map, cell.coord)
   possible.options <- ReturnEmptySpot(current.map, possible.options)
@@ -154,29 +185,92 @@ MakeNewCells <- function(current.map, cell.states, cell.divisions, cell.coord, n
     chosen.spot <- possible.options
   }
   updated.map$data[updated.map$data$id %in% chosen.spot, "value"] <- "Cell"
-  overwrite.state <- GetOriginalData(cell.states, cell.divisions, cell.coord)[[1]]
-  overwrite.division <- GetOriginalData(cell.states, cell.divisions, cell.coord)[[2]]
+  temp <- GetOriginalData(cell.states, cell.divisions,
+                          cell.mut.rate, cell.coord)
+  overwrite.state <- temp[[1]]
+  overwrite.division <- temp[[2]]
+  overwrite.mut.rate <- temp[[3]]
+  if (is.na(overwrite.state) || is.na(overwrite.division) ||
+      overwrite.mut.rate == 0) {
+    print("overwrite.state")
+    print(overwrite.state)
+    print("overwrite.division")
+    print(overwrite.division)
+    print("overwrite.mut.rate")
+    print(overwrite.mut.rate)
+    stop("NEW CELL IS MISSING VALUES")
+  }
   
   for (each in chosen.spot) {
     x <- as.numeric(unlist(strsplit(each, split = "\\."))[1])
     y <- as.numeric(unlist(strsplit(each, split = "\\."))[2])
     cell.states[x, y] <- overwrite.state
     cell.divisions[x, y] <- overwrite.division
+    cell.mut.rate[x, y] <- overwrite.mut.rate
   }
-  return(list(updated.map, cell.states, cell.divisions))
+  return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
-GetOriginalData <- function(cell.states, cell.divisions, cell.coord) {
+GetOriginalData <- function(cell.states, cell.divisions, cell.mut.rate, cell.coord) {
   x <- as.numeric(unlist(strsplit(as.character(cell.coord), split = "\\."))[1])
   y <- as.numeric(unlist(strsplit(as.character(cell.coord), split = "\\."))[2])
   this.state <- cell.states[x, y]
   this.division <- cell.divisions[x, y]
-  return(list(this.state, this.division))
+  this.mut.rate <- cell.mut.rate[x, y]
+  return(list(this.state, this.division, this.mut.rate))
 }
 
-RunCellMove <- function(cell.states) {
-  grep(cell.states, pattern = mutation.encoding$emt)
-  return()
+RunCellMove <- function(current.map, cell.states, cell.divisions, cell.mut.rate) {
+  updated.map <- current.map
+  moving.cells <- which(`dim<-`(grepl(cell.states, pattern = mutation.encoding$emt),
+                                dim(cell.states)), arr.ind = TRUE)
+  # print("these cells can move")
+  # print(moving.cells)
+  if (length(moving.cells) > 0) {
+    for (i in 1:nrow(moving.cells)) {
+      this.coord <- paste0(moving.cells[i, ], collapse = ".")
+      neighboring.cells <- FindNeighborCell(current.map, this.coord)
+      open.spots <- ReturnEmptySpot(current.map, neighboring.cells)
+      possible.options <- c(this.coord, as.character(open.spots))
+      # print(possible.options)
+      new.coord <- sample(possible.options, size = 1)
+      # cat(this.coord, "is moving to", new.coord, "\n")
+      if (new.coord != this.coord) {
+        # print(new.coord)
+        new.ind <- which(updated.map$data[, "id"] == new.coord)
+        while (updated.map$data[new.ind, "value"] != "None" &
+               new.coord != this.coord) {
+          # print("new.coord")
+          # print(new.coord)
+          possible.options <- setdiff(possible.options, new.coord)
+          # print("possible.options")
+          # print(possible.options)
+          new.coord <- sample(possible.options, size = 1)
+          # stop("NEW SPOT IS OCCUPIED")
+        }
+        updated.map$data[new.ind, "value"] <- "Cell"
+        # print(updated.map$data$id[new.ind])
+        # print(updated.map$data$value[new.ind])
+        old.ind <- which(updated.map$data[, "id"] == this.coord)
+        updated.map$data[old.ind, "value"] <- "None"
+        # print(updated.map$data$id[old.ind])
+        # print(updated.map$data$value[old.ind])
+        save.old <- cell.states[moving.cells[i, 1], moving.cells[i, 2]]
+        new.coord2 <- unlist(strsplit(new.coord, split = "\\."))
+        new.coord2 <- as.numeric(new.coord2)
+        cell.states[new.coord2[1], new.coord2[2]] <- save.old
+        cell.states[moving.cells[i, 1], moving.cells[i, 2]] <- NA
+        # print(cell.states)
+        save.old <- cell.divisions[moving.cells[i, 1], moving.cells[i, 2]]
+        cell.divisions[new.coord2[1], new.coord2[2]] <- save.old
+        cell.divisions[moving.cells[i, 1], moving.cells[i, 2]] <- NA
+        save.old <- cell.mut.rate[moving.cells[i, 1], moving.cells[i, 2]]
+        cell.mut.rate[new.coord2[1], new.coord2[2]] <- save.old
+        cell.mut.rate[moving.cells[i, 1], moving.cells[i, 2]] <- 0
+      }
+    }
+  }
+  return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
 RollMutations <- function(map.dim, cell.mut.rate) {

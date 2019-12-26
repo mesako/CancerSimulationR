@@ -14,7 +14,7 @@ SwitchPrePost <- function(cell.states, current.map, mutation.encoding) {
   return(patient.state) 
 }
 
-KillCellsCycling <- function(cell.states, current.map) {
+KillCellsCycling <- function(cell.states, current.map, cell.divisions, cell.mut.rate) {
   updated.map <- current.map
   cycling.ind <- which(`dim<-`(grepl(cell.states, pattern = mutation.encoding$cellcycle),
                                dim(cell.states)), arr.ind = TRUE)
@@ -29,21 +29,21 @@ KillCellsCycling <- function(cell.states, current.map) {
         updated.map$data[this.ind, "value"] <- "None"
       }
       cell.states[kill.these] <- NA
+      cell.divisions[kill.these] <- NA
+      cell.mut.rate[kill.these] <- 0
     }
   }
-  
   # This drug disrupts the cytoskeleton, causing
   # cells to fail to divide or die if they are in the
   # middle of dividing. All cells that divided in the
   # last round must roll for chance of survival. No
   # new cell divisions are allowed during this round.  
   
-  return(list(updated.map, cell.states))
+  return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
-KillCellsDNA <- function(cell.states, current.map) {
+KillCellsDNA <- function(cell.states, current.map, cell.divisions, cell.mut.rate) {
   updated.map <- current.map
-  # print("kill cells that do not have DNA repair mutation")
   repair.ind <- which(`dim<-`(!grepl(cell.states, pattern = mutation.encoding$dnarepair),
                               dim(cell.states)), arr.ind = TRUE)
   rearrange.names <- paste(repair.ind[, 1], repair.ind[, 2], sep = ".")
@@ -58,6 +58,8 @@ KillCellsDNA <- function(cell.states, current.map) {
       this.ind <- which(updated.map$data[, "id"] == this.coord)
       updated.map$data[this.ind, "value"] <- "None"
       cell.states[repair.ind[1], repair.ind[2]] <- NA
+      cell.divisions[repair.ind[1], repair.ind[2]] <- NA
+      cell.mut.rate[repair.ind[1], repair.ind[2]] <- 0
     }
   } else if (class(repair.ind) == "matrix") {
     if (nrow(repair.ind) > 0) {
@@ -71,10 +73,11 @@ KillCellsDNA <- function(cell.states, current.map) {
           updated.map$data[this.ind, "value"] <- "None"
         }
         cell.states[kill.these] <- NA
+        cell.divisions[kill.these] <- NA
+        cell.mut.rate[kill.these] <- 0
       }
     }
   }
-  
   # This therapy damages DNA, inducing death. All
   # cells without the DNA Repair Mutation must
   # roll for chance of survival. No new cell divisions
@@ -82,10 +85,10 @@ KillCellsDNA <- function(cell.states, current.map) {
   # survive or have DNA Repair Mutation must roll
   # for a chance to mutate.
   
-  return(list(updated.map, cell.states))
+  return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
-KillCellsSpace <- function(cell.states, current.map) {
+KillCellsSpace <- function(cell.states, current.map, cell.divisions, cell.mut.rate) {
   resist.ind <- which(`dim<-`(grepl(cell.states, pattern = mutation.encoding$deathinhibit),
                               dim(cell.states)), arr.ind = TRUE)
   resistant.cells <- paste(resist.ind[, 1], resist.ind[, 2], sep = ".")
@@ -103,19 +106,20 @@ KillCellsSpace <- function(cell.states, current.map) {
     this.ind <- unlist(strsplit(this.ind, split = "\\."))
     this.ind <- as.numeric(this.ind)
     cell.states[this.ind[1], this.ind[2]] <- NA
+    cell.divisions[this.ind[1], this.ind[2]] <- NA
+    cell.mut.rate[this.ind[1], this.ind[2]] <- 0
   }
-  
   # Normal cells in the surrounding lung will signal
   # to the cancerous cell to stop dividing or commit
   # apoptosis as they begin to compete for space.
   # All cells without the Death Inhibition Mutation
   # must roll for chance of survival.
   
-  return(list(updated.map, cell.states))
+  return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
 
-KillCellsEnergy <- function(cell.states, current.map) {
+KillCellsEnergy <- function(cell.states, current.map, cell.divisions, cell.mut.rate) {
   updated.map <- current.map
   angio.ind <- which(`dim<-`(grepl(cell.states, pattern = mutation.encoding$angio),
                              dim(cell.states)), arr.ind = TRUE)
@@ -135,10 +139,11 @@ KillCellsEnergy <- function(cell.states, current.map) {
         this.ind <- unlist(strsplit(as.character(kill.these[i]), split = "\\."))
         this.ind <- as.numeric(this.ind)
         cell.states[this.ind[1], this.ind[2]] <- NA
+        cell.divisions[this.ind[1], this.ind[2]] <- NA
+        cell.mut.rate[this.ind[1], this.ind[2]] <- 0
       }
     }
   }
-  
   # Blood vessels that were created through the
   # Angiogenesis Mutation are destroyed. If this
   # results in cells being too far from a source of
@@ -146,10 +151,10 @@ KillCellsEnergy <- function(cell.states, current.map) {
   # chance of survival unless they have a
   # Metabolic Mutation.  
   
-  return(list(updated.map, cell.states))
+  return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
-KillCellsGrowth <- function(cell.states, current.map) {
+KillCellsGrowth <- function(cell.states, current.map, cell.divisions, cell.mut.rate) {
   updated.map <- current.map
   grow.ind <- which(`dim<-`(grepl(cell.states, pattern = mutation.encoding$growthact),
                             dim(cell.states)), arr.ind = TRUE)
@@ -163,16 +168,19 @@ KillCellsGrowth <- function(cell.states, current.map) {
         this.ind <- which(updated.map$data[, "id"] == this.coord)
         updated.map$data[this.ind, "value"] <- "None"
       }
+      # print("kill.these KillCellsGrowth")
+      # print(kill.these)
       cell.states[kill.these] <- NA
+      cell.divisions[kill.these] <- NA
+      cell.mut.rate[kill.these] <- 0
     }
   }
-  
   # This inhibitor specifically binds to a signaling
   # protein that activates growth and blocks it from
   # keeping the cell alive. All cells with the Growth
   # Activation Mutation must roll for chance of survival
   
-  return(list(updated.map, cell.states))
+  return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
 CheckSimilarNeighbors <- function(current.map, search.type = "Cell") {
@@ -206,7 +214,7 @@ CheckSimilarNeighbors <- function(current.map, search.type = "Cell") {
   return(surrounded.tiles)
 }
 
-KillCellsSurgery <- function(cell.states, current.map) {
+KillCellsSurgery <- function(cell.states, current.map, cell.divisions, cell.mut.rate) {
   updated.map <- current.map
   to.remove <- CheckSimilarNeighbors(current.map, search.type = "Cell")
   remove.ind <- which(updated.map$data[, "id"] %in% to.remove)
@@ -217,14 +225,15 @@ KillCellsSurgery <- function(cell.states, current.map) {
     this.ind <- unlist(strsplit(this.ind, split = "\\."))
     this.ind <- as.numeric(this.ind)
     cell.states[this.ind[1], this.ind[2]] <- NA
+    cell.divisions[this.ind[1], this.ind[2]] <- NA
+    cell.mut.rate[this.ind[1], this.ind[2]] <- 0
   }
-  
   # Surgery will remove cancerous cells from the
   # body (removing them from the game). If there is
   # a density of cells in a certain area (above some
   # threshold), all cells in that area are killed.  
   
-  return(list(updated.map, cell.states))
+  return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
 GetPatientAction <- function(patient.state, patient.pre.action.set,
@@ -249,7 +258,7 @@ GetPatientAction <- function(patient.state, patient.pre.action.set,
 
 CheckPatientDeath <- function(cell.states, mutation.encoding) {
   required.mut <- c("emt", "telomerase", "growthact",
-                    "deathinhibit", "cellcycle")
+                    "deathinhibit", "cellcycle", "metastasis")
   first.mut <- mutation.encoding[[required.mut[1]]]
   cell.meet.cond <- grep(cell.states, pattern = first.mut)
   if (length(cell.meet.cond) > 0) {
