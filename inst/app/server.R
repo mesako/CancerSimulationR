@@ -4,6 +4,7 @@ library(ggplot2)
 library(reshape)
 
 server <- function(input, output) {
+  
   react.vals <- reactiveValues()
 
   PLOT1 <- eventReactive(input$button1, {
