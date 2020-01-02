@@ -33,11 +33,29 @@ server <- function(input, output) {
     cell_divisions <<- CancerSimulationR:::GenerateDivisionMatrix(map_dim, starting_map)
     cell_states <<- CancerSimulationR:::MakeStartingCellStateMatrix(map_dim)
     single_output <<- CancerSimulationR:::RunPatientSimulation(single_text_values$rounds, starting_map, mutation_set,
-                                                             patient_preaction_set, patient_postaction_set,
-                                                             mutation_encoding, cell_mut_rate, map_dim,
-                                                             cell_divisions, cell_states, single_text_values$maxdiv)
+                                                               patient_preaction_set, patient_postaction_set,
+                                                               mutation_encoding, cell_mut_rate, map_dim,
+                                                               cell_divisions, cell_states, single_text_values$maxdiv)
     final_map <<- single_output[[1]]
   })
+
+  # patient_status <- eventReactive(input$single_simulate, {
+  #   print(single_output[[7]])
+  # })
+  # output$patient_status <- renderText({
+  #   patient_status()
+  # })
+
+  patient_status <- eventReactive(input$single_simulate, {
+    str0 <- "<br/>"
+    str1 <- single_output[[7]]
+    str2 <- "<br/>"
+    paste(str0, str1, str2, sep = "<br/>")
+  })
+  output$patient_status <- renderUI({
+    HTML(patient_status())
+  })
+
   show_starting_map <- eventReactive(input$single_simulate, {
     print(starting_map)
   })
@@ -95,9 +113,9 @@ server <- function(input, output) {
   ### RUN MULTIPLE SIMULATION
   observeEvent(input$multi_simulate, {
     multi_output <<- CancerSimulationR:::RunPatientSimulation(single_text_values$rounds, starting_map, mutation_set,
-                                                             patient_preaction_set, patient_postaction_set,
-                                                             mutation_encoding, cell_mut_rate, map_dim,
-                                                             cell_divisions, cell_states, single_text_values$maxdiv)
+                                                              patient_preaction_set, patient_postaction_set,
+                                                              mutation_encoding, cell_mut_rate, map_dim,
+                                                              cell_divisions, cell_states, single_text_values$maxdiv)
   })
   final_map <- eventReactive(input$multi_simulate, {
     print(multi_output[[1]])

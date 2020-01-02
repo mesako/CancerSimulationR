@@ -32,6 +32,7 @@ RunPatientSimulation <- function(num.rounds, starting.map, mutation.set,
                                  patient.pre.action.set, patient.post.action.set,
                                  mutation.encoding, cell.mut.rate, map.dim,
                                  cell.divisions, cell.states, max.divisions) {
+  patient.summary.statement <- ""
   num.surgery <- 0
   patient.state <- "pre"
   current.map <- starting.map
@@ -162,30 +163,35 @@ RunPatientSimulation <- function(num.rounds, starting.map, mutation.set,
     }
     cell.meet.cond <- CheckPatientDeath(cell.states, mutation.encoding)
     if (length(cell.meet.cond) > round(length(cell.states) * 0.1) && !is.null(cell.meet.cond)) {
-      cat("round", i, "\n")
-      print("patient has died")
+      patient.summary.statement <- paste("Patient has died from aggressive, metastastatic tumor at round ", i, ".", sep = "")
+      # cat("round", i, "\n")
+      # print("patient has died")
       # has mutations: E, T, D, G, C, S
       # EMT, telomerase, death inhibition,
       # growth activation, cell cycle, metastasis
-      print("aggressive tumor has metastasized")
-      print(cell.states[cell.meet.cond])
+      # print("aggressive tumor has metastasized")
+      # print(cell.states[cell.meet.cond])
       break
     }
     if (sum(current.map$data$value == "Cell") > round(nrow(current.map$data) * 0.80)) {
       tumor.burden.count <- tumor.burden.count + 1
       if (tumor.burden.count >= 3) {
-        cat("round", i, "\n")
-        print("patient has died")
-        print("too much tumor burden")
+        patient.summary.statement <- paste("Patient has died from high ongoing tumor burden at round ", i, ".", sep = "")
+        # cat("round", i, "\n")
+        # print("patient has died")
+        # print("too much tumor burden")
         break
       }
+    }
+    if (nchar(patient.summary.statement) < 1) {
+      patient.summary.statement <- "Patient is still alive."
     }
     round.cell.num <- c(round.cell.num, GetCellNumbers(current.map))
     round.average.mut.num <- c(round.average.mut.num,
                                GetAverageMutationNum(cell.states, GetCellNumbers(current.map)))
   }
   return(list(current.map, cell.states, cell.divisions, cell.mut.rate,
-              round.cell.num, round.average.mut.num))
+              round.cell.num, round.average.mut.num, patient.summary.statement))
 }
 
 

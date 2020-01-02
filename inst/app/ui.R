@@ -16,7 +16,7 @@ ui <- fluidPage(
                         mainPanel(
                           tabsetPanel(
                             tabPanel("Patient Summary",
-                                     h3("INFO")),
+                                     htmlOutput("patient_status")),
                             tabPanel("Cell Maps", splitLayout(cellWidths = c("50%", "50%"),
                                                               plotOutput("show_starting_map"),
                                                               plotOutput("show_final_map"))),

@@ -5,14 +5,11 @@ GetCellNumbers <- function(current.map) {
 }
 
 GetCellMutNum <- function(cell.states) {
-  # print(cell.states)
-  # print(sum(!is.na(cell.states)))
   if (sum(!is.na(cell.states)) < 1) {
     num.mut.per.cell <- 0
   } else {
     num.mut.per.cell <- sapply(cell.states[!is.na(cell.states)], nchar)
   }
-  # print(cell.states[!is.na(cell.states)])
   return(num.mut.per.cell)
 }
 
