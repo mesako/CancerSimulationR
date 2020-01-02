@@ -30,7 +30,7 @@ DeterminePatientAction <- function(current.map, patient.state, num.surgery,
 
 RunPatientSimulation <- function(num.rounds, starting.map, mutation.set,
                                  patient.pre.action.set, patient.post.action.set,
-                                 mutation.encoding, cell.mut.rate,
+                                 mutation.encoding, cell.mut.rate, map.dim,
                                  cell.divisions, cell.states, max.divisions) {
   num.surgery <- 0
   patient.state <- "pre"
@@ -39,20 +39,22 @@ RunPatientSimulation <- function(num.rounds, starting.map, mutation.set,
   round.average.mut.num <- c()
   tumor.burden.count <- 0
   for (i in 1:num.rounds) {
+    print(paste("Round", i))
     patient.action <- DeterminePatientAction(current.map, patient.state, num.surgery,
                                              patient.pre.action.set, patient.post.action.set)
+    print(patient.action)
     if (patient.action == "noaction") {
       cell.states <- AddMutations(cell.states, cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate)
+                                  map.dim, mutation.encoding, mutation.set)
+      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate, mutation.encoding)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
       cell.mut.rate <- results[[4]]
     } else if (patient.action == "doctor") {
       cell.states <- AddMutations(cell.states, cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate)
+                                  map.dim, mutation.encoding, mutation.set)
+      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate, mutation.encoding)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
@@ -61,52 +63,52 @@ RunPatientSimulation <- function(num.rounds, starting.map, mutation.set,
     } else if (patient.action == "smoke" | patient.action == "asbestos" | patient.action == "radexpose") {
       temp.cell.mut.rate <- cell.mut.rate * 20
       cell.states <- AddMutations(cell.states, temp.cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate)
+                                  map.dim, mutation.encoding, mutation.set)
+      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate, mutation.encoding)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
       cell.mut.rate <- results[[4]]
     } else if (patient.action == "deathinduct") {
       cell.states <- AddMutations(cell.states, cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate)
+                                  map.dim, mutation.encoding, mutation.set)
+      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate, mutation.encoding)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
       cell.mut.rate <- results[[4]]
-      results <- KillCellsSpace(cell.states, current.map, cell.divisions, cell.mut.rate)
+      results <- KillCellsSpace(cell.states, current.map, cell.divisions, cell.mut.rate, mutation.encoding)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
       cell.mut.rate <- results[[4]]
     } else if (patient.action == "immune" | patient.action == "growthinhibit" | patient.action == "targeted") {
       cell.states <- AddMutations(cell.states, cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate)
+                                  map.dim, mutation.encoding, mutation.set)
+      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate, mutation.encoding)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
       cell.mut.rate <- results[[4]]
-      results <- KillCellsGrowth(cell.states, current.map, cell.divisions, cell.mut.rate)
+      results <- KillCellsGrowth(cell.states, current.map, cell.divisions, cell.mut.rate, mutation.encoding)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
       cell.mut.rate <- results[[4]]
     } else if (patient.action == "chemo1") {
       cell.states <- AddMutations(cell.states, cell.mut.rate,
-                                  map.dim, mutation.encoding)
+                                  map.dim, mutation.encoding, mutation.set)
       results <- MarkDeadCells(cell.states, current.map, cell.divisions, cell.mut.rate)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
       cell.mut.rate <- results[[4]]
-      results <- CheckEnergyNeed(current.map, cell.states, cell.divisions, cell.mut.rate)
+      results <- CheckEnergyNeed(current.map, cell.states, cell.divisions, cell.mut.rate, mutation.encoding)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
       cell.mut.rate <- results[[4]]
-      results <- KillCellsCycling(cell.states, current.map, cell.divisions, cell.mut.rate)
+      results <- KillCellsCycling(cell.states, current.map, cell.divisions, cell.mut.rate, mutation.encoding)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
@@ -114,39 +116,39 @@ RunPatientSimulation <- function(num.rounds, starting.map, mutation.set,
     } else if (patient.action == "chemo2" | patient.action == "radtherapy") {
       temp.cell.mut.rate <- cell.mut.rate * 10
       cell.states <- AddMutations(cell.states, temp.cell.mut.rate,
-                                  map.dim, mutation.encoding)
+                                  map.dim, mutation.encoding, mutation.set)
       results <- MarkDeadCells(cell.states, current.map, cell.divisions, cell.mut.rate)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
       cell.mut.rate <- results[[4]]
-      results <- CheckEnergyNeed(current.map, cell.states, cell.divisions, cell.mut.rate)
+      results <- CheckEnergyNeed(current.map, cell.states, cell.divisions, cell.mut.rate, mutation.encoding)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
       cell.mut.rate <- results[[4]]
-      results <- KillCellsDNA(cell.states, current.map, cell.divisions, cell.mut.rate)
+      results <- KillCellsDNA(cell.states, current.map, cell.divisions, cell.mut.rate, mutation.encoding)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
       cell.mut.rate <- results[[4]]
     } else if (patient.action == "angblock") {
       cell.states <- AddMutations(cell.states, cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate)
+                                  map.dim, mutation.encoding, mutation.set)
+      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate, mutation.encoding)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
       cell.mut.rate <- results[[4]]
-      results <- KillCellsEnergy(cell.states, current.map, cell.divisions, cell.mut.rate)
+      results <- KillCellsEnergy(cell.states, current.map, cell.divisions, cell.mut.rate, mutation.encoding)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
       cell.mut.rate <- results[[4]]
     } else if (patient.action == "surgery") {
       cell.states <- AddMutations(cell.states, cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate)
+                                  map.dim, mutation.encoding, mutation.set)
+      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate, mutation.encoding)
       current.map <- results[[1]]
       cell.states <- results[[2]]
       cell.divisions <- results[[3]]
@@ -189,161 +191,9 @@ RunPatientSimulation <- function(num.rounds, starting.map, mutation.set,
 
 RunMultiSimulation <- function(num.rounds, starting.map, mutation.set,
                                patient.pre.action.set, patient.post.action.set,
-                               mutation.encoding, cell.mut.rate,
+                               mutation.encoding, cell.mut.rate, map.dim,
                                cell.divisions, cell.states, max.divisions) {
-  
+
   # TO BE FILLED IN
 }
 
-
-RunSimulation <- function(num.rounds, starting.map, mutation.set,
-                          patient.pre.action.set, patient.post.action.set,
-                          mutation.encoding, cell.mut.rate,
-                          cell.divisions, cell.states, max.divisions) {
-  num.surgery <- 0
-  patient.state <- "pre"
-  current.map <- starting.map
-  tumor.burden.count <- 0
-  for (i in 1:num.rounds) {
-    patient.action <- DeterminePatientAction(current.map, patient.state, num.surgery,
-                                             patient.pre.action.set, patient.post.action.set)
-    if (patient.action == "noaction") {
-      cell.states <- AddMutations(cell.states, cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-    } else if (patient.action == "doctor") {
-      cell.states <- AddMutations(cell.states, cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-      patient.state <- SwitchPrePost(cell.states, current.map, mutation.encoding)
-    } else if (patient.action == "smoke" | patient.action == "asbestos" | patient.action == "radexpose") {
-      temp.cell.mut.rate <- cell.mut.rate * 20
-      cell.states <- AddMutations(cell.states, temp.cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-    } else if (patient.action == "deathinduct") {
-      cell.states <- AddMutations(cell.states, cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-      results <- KillCellsSpace(cell.states, current.map, cell.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-    } else if (patient.action == "immune" | patient.action == "growthinhibit" | patient.action == "targeted") {
-      cell.states <- AddMutations(cell.states, cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-      results <- KillCellsGrowth(cell.states, current.map, cell.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-    } else if (patient.action == "chemo1") {
-      cell.states <- AddMutations(cell.states, cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- MarkDeadCells(cell.states, current.map, cell.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-      results <- CheckEnergyNeed(current.map, cell.states, cell.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-      results <- KillCellsCycling(cell.states, current.map, cell.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-    } else if (patient.action == "chemo2" | patient.action == "radtherapy") {
-      temp.cell.mut.rate <- cell.mut.rate * 10
-      cell.states <- AddMutations(cell.states, temp.cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- MarkDeadCells(cell.states, current.map, cell.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-      results <- CheckEnergyNeed(current.map, cell.states, cell.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-      results <- KillCellsDNA(cell.states, current.map, cell.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-    } else if (patient.action == "angblock") {
-      cell.states <- AddMutations(cell.states, cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-      results <- KillCellsEnergy(cell.states, current.map, cell.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-    } else if (patient.action == "surgery") {
-      cell.states <- AddMutations(cell.states, cell.mut.rate,
-                                  map.dim, mutation.encoding)
-      results <- RunBaselineCellActions(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-      results <- KillCellsSurgery(cell.states, current.map, cell.divisions, cell.mut.rate)
-      current.map <- results[[1]]
-      cell.states <- results[[2]]
-      cell.divisions <- results[[3]]
-      cell.mut.rate <- results[[4]]
-      num.surgery <- num.surgery + 1
-    }
-    cell.meet.cond <- CheckPatientDeath(cell.states, mutation.encoding)
-    if (length(cell.meet.cond) > round(length(cell.states) * 0.1) && !is.null(cell.meet.cond)) {
-      cat("round", i, "\n")
-      print("patient has died")
-      # has mutations: E, T, D, G, C, S
-      # EMT, telomerase, death inhibition,
-      # growth activation, cell cycle, metastasis
-      print("aggressive tumor has metastasized")
-      print(cell.states[cell.meet.cond])
-      break
-    }
-    if (sum(current.map$data$value == "Cell") > round(nrow(current.map$data) * 0.80)) {
-      tumor.burden.count <- tumor.burden.count + 1
-      if (tumor.burden.count >= 3) {
-        cat("round", i, "\n")
-        print("patient has died")
-        print("too much tumor burden")
-        break
-      }
-    }
-  }
-  return(list(current.map, cell.states, cell.divisions, cell.mut.rate))
-}

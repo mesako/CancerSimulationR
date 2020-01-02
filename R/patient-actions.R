@@ -11,10 +11,10 @@ SwitchPrePost <- function(cell.states, current.map, mutation.encoding) {
   } else {
     patient.state <- "pre"
   }
-  return(patient.state) 
+  return(patient.state)
 }
 
-KillCellsCycling <- function(cell.states, current.map, cell.divisions, cell.mut.rate) {
+KillCellsCycling <- function(cell.states, current.map, cell.divisions, cell.mut.rate, mutation.encoding) {
   updated.map <- current.map
   cycling.ind <- which(`dim<-`(grepl(cell.states, pattern = mutation.encoding$cellcycle),
                                dim(cell.states)), arr.ind = TRUE)
@@ -37,12 +37,12 @@ KillCellsCycling <- function(cell.states, current.map, cell.divisions, cell.mut.
   # cells to fail to divide or die if they are in the
   # middle of dividing. All cells that divided in the
   # last round must roll for chance of survival. No
-  # new cell divisions are allowed during this round.  
-  
+  # new cell divisions are allowed during this round.
+
   return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
-KillCellsDNA <- function(cell.states, current.map, cell.divisions, cell.mut.rate) {
+KillCellsDNA <- function(cell.states, current.map, cell.divisions, cell.mut.rate, mutation.encoding) {
   updated.map <- current.map
   repair.ind <- which(`dim<-`(!grepl(cell.states, pattern = mutation.encoding$dnarepair),
                               dim(cell.states)), arr.ind = TRUE)
@@ -84,11 +84,11 @@ KillCellsDNA <- function(cell.states, current.map, cell.divisions, cell.mut.rate
   # are allowed during this round. Any cells that
   # survive or have DNA Repair Mutation must roll
   # for a chance to mutate.
-  
+
   return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
-KillCellsSpace <- function(cell.states, current.map, cell.divisions, cell.mut.rate) {
+KillCellsSpace <- function(cell.states, current.map, cell.divisions, cell.mut.rate, mutation.encoding) {
   resist.ind <- which(`dim<-`(grepl(cell.states, pattern = mutation.encoding$deathinhibit),
                               dim(cell.states)), arr.ind = TRUE)
   resistant.cells <- paste(resist.ind[, 1], resist.ind[, 2], sep = ".")
@@ -114,12 +114,12 @@ KillCellsSpace <- function(cell.states, current.map, cell.divisions, cell.mut.ra
   # apoptosis as they begin to compete for space.
   # All cells without the Death Inhibition Mutation
   # must roll for chance of survival.
-  
+
   return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
 
-KillCellsEnergy <- function(cell.states, current.map, cell.divisions, cell.mut.rate) {
+KillCellsEnergy <- function(cell.states, current.map, cell.divisions, cell.mut.rate, mutation.encoding) {
   updated.map <- current.map
   angio.ind <- which(`dim<-`(grepl(cell.states, pattern = mutation.encoding$angio),
                              dim(cell.states)), arr.ind = TRUE)
@@ -149,12 +149,12 @@ KillCellsEnergy <- function(cell.states, current.map, cell.divisions, cell.mut.r
   # results in cells being too far from a source of
   # food (blood vessel), these cells must roll for a
   # chance of survival unless they have a
-  # Metabolic Mutation.  
-  
+  # Metabolic Mutation.
+
   return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
-KillCellsGrowth <- function(cell.states, current.map, cell.divisions, cell.mut.rate) {
+KillCellsGrowth <- function(cell.states, current.map, cell.divisions, cell.mut.rate, mutation.encoding) {
   updated.map <- current.map
   grow.ind <- which(`dim<-`(grepl(cell.states, pattern = mutation.encoding$growthact),
                             dim(cell.states)), arr.ind = TRUE)
@@ -168,8 +168,6 @@ KillCellsGrowth <- function(cell.states, current.map, cell.divisions, cell.mut.r
         this.ind <- which(updated.map$data[, "id"] == this.coord)
         updated.map$data[this.ind, "value"] <- "None"
       }
-      # print("kill.these KillCellsGrowth")
-      # print(kill.these)
       cell.states[kill.these] <- NA
       cell.divisions[kill.these] <- NA
       cell.mut.rate[kill.these] <- 0
@@ -179,7 +177,7 @@ KillCellsGrowth <- function(cell.states, current.map, cell.divisions, cell.mut.r
   # protein that activates growth and blocks it from
   # keeping the cell alive. All cells with the Growth
   # Activation Mutation must roll for chance of survival
-  
+
   return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
@@ -231,8 +229,8 @@ KillCellsSurgery <- function(cell.states, current.map, cell.divisions, cell.mut.
   # Surgery will remove cancerous cells from the
   # body (removing them from the game). If there is
   # a density of cells in a certain area (above some
-  # threshold), all cells in that area are killed.  
-  
+  # threshold), all cells in that area are killed.
+
   return(list(updated.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
@@ -283,6 +281,6 @@ CheckPatientDeath <- function(cell.states, mutation.encoding) {
   # surrounded by cells. If this cell meets these
   # criteria, the cell is able to leave the organ and
   # spread to other organs, killing this patient.
-  
+
   return(cell.meet.cond)
 }

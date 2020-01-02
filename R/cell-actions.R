@@ -17,24 +17,24 @@ MarkDeadCells <- function(cell.states, current.map, cell.divisions, cell.mut.rat
 }
 
 RunBaselineCellActions <- function(current.map, cell.states, cell.divisions,
-                                   max.divisions, cell.mut.rate) {
+                                   max.divisions, cell.mut.rate, mutation.encoding) {
   results <- MarkDeadCells(cell.states, current.map, cell.divisions, cell.mut.rate)
   current.map <- results[[1]]
   cell.states <- results[[2]]
   cell.divisions <- results[[3]]
   cell.mut.rate <- results[[4]]
   results <- RunCellDivision(current.map, cell.states, cell.divisions,
-                             max.divisions, cell.mut.rate)
+                             max.divisions, cell.mut.rate, mutation.encoding)
   current.map <- results[[1]]
   cell.states <- results[[2]]
   cell.divisions <- results[[3]]
   cell.mut.rate <- results[[4]]
-  results <- CheckEnergyNeed(current.map, cell.states, cell.divisions, cell.mut.rate)
+  results <- CheckEnergyNeed(current.map, cell.states, cell.divisions, cell.mut.rate, mutation.encoding)
   current.map <- results[[1]]
   cell.states <- results[[2]]
   cell.divisions <- results[[3]]
   cell.mut.rate <- results[[4]]
-  results <- RunCellMove(current.map, cell.states, cell.divisions, cell.mut.rate)
+  results <- RunCellMove(current.map, cell.states, cell.divisions, cell.mut.rate, mutation.encoding)
   current.map <- results[[1]]
   cell.states <- results[[2]]
   cell.divisions <- results[[3]]
@@ -42,7 +42,7 @@ RunBaselineCellActions <- function(current.map, cell.states, cell.divisions,
   return(list(current.map, cell.states, cell.divisions, cell.mut.rate))
 }
 
-CheckEnergyNeed <- function(current.map, cell.states, cell.divisions, cell.mut.rate) {
+CheckEnergyNeed <- function(current.map, cell.states, cell.divisions, cell.mut.rate, mutation.encoding) {
   updated.map <- current.map
   blood.ind <- current.map$data$id[current.map$data$value == "Blood"]
   blood.ind.num <- as.numeric(as.character(blood.ind))
@@ -73,7 +73,7 @@ CheckEnergyNeed <- function(current.map, cell.states, cell.divisions, cell.mut.r
                         energy.ind[seq(2, length(energy.ind), by = 2)], sep = ".")
     remove.candidates <- setdiff(remove.candidates, energy.ind)
   }
-  
+
   if (length(remove.candidates) > 0) {
     num.to.remove <- round(length(remove.candidates) * 0.2)
     to.remove <- sample(remove.candidates, num.to.remove,  replace = FALSE)
@@ -128,7 +128,7 @@ ReturnEmptySpot <- function(current.map, possible.options) {
   return(match.ind)
 }
 
-RunCellDivision <- function(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate) {
+RunCellDivision <- function(current.map, cell.states, cell.divisions, max.divisions, cell.mut.rate, mutation.encoding) {
   extract.dim <- as.numeric(current.map$data$id)
   extract.dim <- floor(max(extract.dim))
   temp1 <- matrix(current.map$data$id, nrow = extract.dim, byrow = TRUE)
@@ -200,7 +200,7 @@ MakeNewCells <- function(current.map, cell.states, cell.divisions,
     print(overwrite.mut.rate)
     stop("NEW CELL IS MISSING VALUES")
   }
-  
+
   for (each in chosen.spot) {
     x <- as.numeric(unlist(strsplit(each, split = "\\."))[1])
     y <- as.numeric(unlist(strsplit(each, split = "\\."))[2])
@@ -220,7 +220,7 @@ GetOriginalData <- function(cell.states, cell.divisions, cell.mut.rate, cell.coo
   return(list(this.state, this.division, this.mut.rate))
 }
 
-RunCellMove <- function(current.map, cell.states, cell.divisions, cell.mut.rate) {
+RunCellMove <- function(current.map, cell.states, cell.divisions, cell.mut.rate, mutation.encoding) {
   updated.map <- current.map
   moving.cells <- which(`dim<-`(grepl(cell.states, pattern = mutation.encoding$emt),
                                 dim(cell.states)), arr.ind = TRUE)
@@ -298,7 +298,8 @@ EncodeMutation <- function(mutation.encoding, new.mutations) {
 }
 
 AddMutations <- function(cell.states, cell.mut.rate,
-                         map.dim, mutation.encoding) {
+                         map.dim, mutation.encoding,
+                         mutation.set) {
   match.ind <- RollMutations(map.dim, cell.mut.rate)
   updated.cell.states <- cell.states
   if (length(match.ind) > 0) {

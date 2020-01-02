@@ -10,48 +10,62 @@ server <- function(input, output) {
     text_values$mutrate <- input$mutationrate
     text_values$maxdiv <- input$maxdivisions
     text_values$rounds <- input$numrounds
-    map_dim <- c(10, 10)
-    print(map_dim)
-    starting_map <- CancerSimulationR:::GenerateMap(map_dim)
-    print(starting_map)
-    mutation_set <- CancerSimulationR:::EstablishMutations()
-    print(text_values$mutrate)
-    print(text_values$maxdiv)
-    print(text_values$rounds)
-    patient_preaction_set <- CancerSimulationR:::EstablishPatientPreActions()
-    patient_postaction_set <- CancerSimulationR:::EstablishPatientPostActions()
-    mutation_encoding <- CancerSimulationR:::MakeMutationEncoding(mutation_set)
-    cell_mut_rate <- CancerSimulationR:::GenerateMutationMatrix(map_dim, starting_map, text_values$mutrate)
-    cell_divisions <- CancerSimulationR:::GenerateDivisionMatrix(map_dim, starting_map)
-    cell_states <- CancerSimulationR:::MakeStartingCellStateMatrix(map_dim)
+    map_dim <<- c(10, 10)
+    starting_map <<- CancerSimulationR:::GenerateMap(map_dim)
+    mutation_set <<- CancerSimulationR:::EstablishMutations()
+    patient_preaction_set <<- CancerSimulationR:::EstablishPatientPreActions()
+    patient_postaction_set <<- CancerSimulationR:::EstablishPatientPostActions()
+    mutation_encoding <<- CancerSimulationR:::MakeMutationEncoding(mutation_set)
+    cell_mut_rate <<- CancerSimulationR:::GenerateMutationMatrix(map_dim, starting_map, text_values$mutrate)
+    cell_divisions <<- CancerSimulationR:::GenerateDivisionMatrix(map_dim, starting_map)
+    cell_states <<- CancerSimulationR:::MakeStartingCellStateMatrix(map_dim)
   })
   output$text_vals <- renderUI({
+    str0 <- "<br/>"
     str1 <- paste("Mutation rate assigned to", text_values$mutrate)
     str2 <- paste("Max number of cell divisions to", text_values$maxdiv)
     str3 <- paste("Number of rounds assigned to", text_values$rounds)
-    HTML(paste(str1, str2, str3, sep = "<br/>"))
+    str4 <- "<br/>"
+    HTML(paste(str0, str1, str2, str3, str4, sep = "<br/>"))
   })
 
   ### SIMULATE SINGLE PATIENT
   observeEvent(input$simulate1, {
-    save_output <- CancerSimulationR:::RunPatientSimulation(text_values$rounds, starting_map, mutation_set,
-                                                                    patient_preaction_set, patient_postaction_set,
-                                                                    mutation_encoding, cell_mut_rate,
-                                                                    cell_divisions, cell_states, text_values$maxdiv)
+    save_output <<- CancerSimulationR:::RunPatientSimulation(text_values$rounds, starting_map, mutation_set,
+                                                             patient_preaction_set, patient_postaction_set,
+                                                             mutation_encoding, cell_mut_rate, map_dim,
+                                                             cell_divisions, cell_states, text_values$maxdiv)
   })
-
-  PLOT1 <- eventReactive(input$showmap1, {
+  final_map <- eventReactive(input$simulate1, {
     print(save_output[[1]])
   })
-  output$PLOT1 <- renderPlot({
-    PLOT1()
+  output$final_map <- renderPlot({
+    final_map()
   })
 
 
-  PLOT2 <- eventReactive(input$button2, {
-    # fill in plot
+  ### SIMULATE MULTIPLE PATIENTS
+  text_values2 <- reactiveValues()
+  observeEvent(input$button2, {
+    text_values2$mutrate <- input$mutationrate2
+    text_values2$maxdiv <- input$maxdivisions2
+    text_values2$rounds <- input$numrounds2
+    map_dim <<- c(10, 10)
+    starting_map <<- CancerSimulationR:::GenerateMap(map_dim)
+    mutation_set <<- CancerSimulationR:::EstablishMutations()
+    patient_preaction_set <<- CancerSimulationR:::EstablishPatientPreActions()
+    patient_postaction_set <<- CancerSimulationR:::EstablishPatientPostActions()
+    mutation_encoding <<- CancerSimulationR:::MakeMutationEncoding(mutation_set)
+    cell_mut_rate <<- CancerSimulationR:::GenerateMutationMatrix(map_dim, starting_map, text_values$mutrate)
+    cell_divisions <<- CancerSimulationR:::GenerateDivisionMatrix(map_dim, starting_map)
+    cell_states <<- CancerSimulationR:::MakeStartingCellStateMatrix(map_dim)
   })
-  output$PLOT2 <- renderPlot({
-    PLOT2()
+  output$text_vals2 <- renderUI({
+    str0 <- "<br/>"
+    str1 <- paste("Mutation rate assigned to", text_values2$mutrate)
+    str2 <- paste("Max number of cell divisions to", text_values2$maxdiv)
+    str3 <- paste("Number of rounds assigned to", text_values2$rounds)
+    str4 <- "<br/>"
+    HTML(paste(str0, str1, str2, str3, str4, sep = "<br/>"))
   })
 }
