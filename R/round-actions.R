@@ -39,10 +39,10 @@ RunPatientSimulation <- function(num.rounds, starting.map, mutation.set,
   round.average.mut.num <- c()
   tumor.burden.count <- 0
   for (i in 1:num.rounds) {
-    print(paste("Round", i))
+    # print(paste("Round", i))
     patient.action <- DeterminePatientAction(current.map, patient.state, num.surgery,
                                              patient.pre.action.set, patient.post.action.set)
-    print(patient.action)
+    # print(patient.action)
     if (patient.action == "noaction") {
       cell.states <- AddMutations(cell.states, cell.mut.rate,
                                   map.dim, mutation.encoding, mutation.set)

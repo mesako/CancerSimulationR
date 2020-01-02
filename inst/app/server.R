@@ -114,9 +114,22 @@ server <- function(input, output) {
                                                                      mutation_encoding, cell_mut_rate, map_dim,
                                                                      cell_divisions, cell_states, multi_text_values$maxdiv)
 
-      # print(multi_output[[i]][[7]])
     }
   })
+
+  show_survival_curve <- eventReactive(input$multi_simulate, {
+    patient.summary.statements <<- c()
+    for (i in 1:multi_text_values$patients) {
+      patient.summary.statements <<- c(patient.summary.statements,
+                                       multi_output[[i]][[7]])
+    }
+    print(CancerSimulationR:::PlotMultiSurvivalCurve(patient.summary.statements,
+                                                     multi_text_values$rounds))
+  })
+  output$show_survival_curve <- renderPlot({
+    show_survival_curve()
+  })
+
 
   show_patient_status <- eventReactive(input$multi_simulate, {
     patient.summary.statements <<- c()
@@ -124,11 +137,42 @@ server <- function(input, output) {
       patient.summary.statements <<- c(patient.summary.statements,
                                        multi_output[[i]][[7]])
     }
-    print(patient.summary.statements)
     print(CancerSimulationR:::PlotMultiPatientSummary(patient.summary.statements))
   })
   output$show_patient_status <- renderPlot({
     show_patient_status()
   })
 
+  multi_mut_plot <- eventReactive(input$multi_simulate, {
+    all.average.mut.nums <<- c()
+    for (i in 1:multi_text_values$patients) {
+      temp <- multi_output[[i]][[6]]
+      # print(temp)
+      if (length(temp) < multi_text_values$rounds) {
+        temp <- c(temp, rep(temp[length(temp)],
+                            times = (ncol(all.average.mut.nums) - length(temp))))
+      }
+      all.average.mut.nums <<- rbind(all.average.mut.nums, temp)
+    }
+    print(CancerSimulationR:::MultiPlotAverageMutNum(all.average.mut.nums))
+  })
+  output$multi_mut_plot <- renderPlot({
+    multi_mut_plot()
+  })
+
+  multi_num_plot <- eventReactive(input$multi_simulate, {
+    all.total.cell.nums <<- c()
+    for (i in 1:multi_text_values$patients) {
+      temp <- multi_output[[i]][[5]]
+      if (length(temp) < multi_text_values$rounds) {
+        temp <- c(temp, rep(temp[length(temp)],
+                            times = (ncol(all.total.cell.nums) - length(temp))))
+      }
+      all.total.cell.nums <<- rbind(all.total.cell.nums, temp)
+    }
+    print(CancerSimulationR:::MultiPlotTotalCellNum(all.total.cell.nums))
+  })
+  output$multi_num_plot <- renderPlot({
+    multi_num_plot()
+  })
 }

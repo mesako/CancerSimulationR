@@ -56,20 +56,71 @@ PlotMultiPatientSummary <- function(patient.summary.statements) {
   return(patient.plot)
 }
 
+PlotMultiSurvivalCurve <- function(patient.summary.statements,
+                                   num.rounds) {
+  total.num <- length(patient.summary.statements)
+  when.death <- grep("round", patient.summary.statements)
+  if (length(when.death) < 1) {
+    round.num <- sprintf("%02d", 1:num.rounds)
+    round.data <- round.num
+    round.data <- as.data.frame(round.data)
+    round.data <- cbind(round.data, rep(total.num, times = nrow(round.data)))
+    colnames(round.data) <- c("RoundNum", "NumAlive")
+    patient.plot <- ggplot(round.data, aes(x = RoundNum, y = NumAlive))
+    patient.plot <- patient.plot + geom_point() + geom_line(group = 1)
+    patient.plot <- patient.plot + ylim(0, total.num)
+  } else {
+    when.death <- patient.summary.statements[when.death]
+    when.death <- regmatches(when.death, gregexpr("[[:digit:]]+", when.death))
+    when.death <- as.numeric(unlist(when.death))
+    when.death <- table(when.death)
+    num.dead <- cumsum(when.death)
+    num.alive <- total.num - num.dead
+    round.num <- sprintf("%02d", 1:num.rounds)
+    round.data <- round.num
+    round.data <- as.data.frame(round.data)
+    round.data <- cbind(round.data, rep(total.num, times = nrow(round.data)))
+    colnames(round.data) <- c("RoundNum", "NumAlive")
+    change.num.ind <- as.numeric(names(num.alive))
+    change.num.ind <- c(change.num.ind, num.rounds + 1)
+    for (x in 1:(length(change.num.ind) - 1)) {
+      new.num <- unname(num.alive[as.character(change.num.ind[x])])
+      round.data[change.num.ind[x]:(change.num.ind[x + 1] - 1), 2] <- new.num
+    }
+    patient.plot <- ggplot(round.data, aes(x = RoundNum, y = NumAlive))
+    patient.plot <- patient.plot + geom_point() + geom_line(group = 1)
+    patient.plot <- patient.plot + ylim(0, total.num)
+  }
+  return(patient.plot)
+}
+
 MultiPlotAverageMutNum <- function(all.average.mut.nums) {
-  this.data <- cbind(1:length(all.average.mut.num), all.average.mut.num)
+  patient.nums <- 1:nrow(all.average.mut.nums)
+  patient.nums <- sprintf("%02d", patient.nums)
+  this.data <- cbind(paste0("Patient", patient.nums), all.average.mut.nums)
   this.data <- as.data.frame(this.data)
-  colnames(this.data) <- c("Round", "AvgMutNum")
-  mut.plot <- ggplot(data = this.data, mapping = aes(x = Round, y = AvgMutNum))
+  colnames(this.data)[1] <- c("Patient")
+  round.num <- sprintf("%02d", 1:ncol(all.average.mut.nums))
+  colnames(this.data)[2:ncol(this.data)] <- paste0("Round", round.num)
+  this.data.m <- melt(this.data, id.vars = "Patient")
+  mut.plot <- ggplot(data = this.data.m, mapping = aes(x = variable, y = value,
+                                                       group = Patient, color = Patient))
   mut.plot <- mut.plot + geom_point() + geom_line()
+  mut.plot <- mut.plot + xlab("Round Number") + ylab("Average Number of Mutations")
   return(mut.plot)
 }
 
-MultiPlotTotalCellNum <- function(all.total.cell.num) {
-  this.data <- cbind(1:length(all.total.cell.num), all.total.cell.num)
+MultiPlotTotalCellNum <- function(all.total.cell.nums) {
+  patient.nums <- 1:nrow(all.total.cell.nums)
+  patient.nums <- sprintf("%02d", patient.nums)
+  this.data <- cbind(paste0("Patient", patient.nums), all.total.cell.nums)
   this.data <- as.data.frame(this.data)
-  colnames(this.data) <- c("Round", "CellNum")
-  cell.plot <- ggplot(data = this.data, mapping = aes(x = Round, y = CellNum))
+  colnames(this.data)[1] <- c("Patient")
+  colnames(this.data)[2:ncol(this.data)] <- paste0("Round", 1:ncol(all.total.cell.nums))
+  this.data.m <- melt(this.data, id.vars = "Patient")
+  cell.plot <- ggplot(data = this.data.m, mapping = aes(x = variable, y = value,
+                                                       group = Patient, color = Patient))
   cell.plot <- cell.plot + geom_point() + geom_line()
+  cell.plot <- cell.plot + xlab("Round Number") + ylab("Total Number of Cells")
   return(cell.plot)
 }

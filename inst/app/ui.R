@@ -49,14 +49,18 @@ ui <- fluidPage(
                                      actionButton(inputId = "multi_simulate", label = "Run Simulations")),
                         mainPanel(
                           tabsetPanel(
-                            tabPanel("Patient Summaries",
-                                     plotOutput("show_patient_status")),
-                            tabPanel("Example Cell Maps", splitLayout(cellWidths = c("50%", "50%"),
-                                                                      h3("BOOP"),
-                                                                      h3("BOOP"))),
-                            tabPanel("Summary Plots", splitLayout(cellWidths = c("50%", "50%"),
-                                                                  h3("BOOP"),
-                                                                  h3("BOOP"))),
+                            tabPanel("Patient Summaries", verticalLayout(
+                              plotOutput("show_patient_status"),
+                              plotOutput("show_survival_curve"))),
+                            tabPanel("Summary Plots", verticalLayout(
+                              plotOutput("multi_num_plot"),
+                              plotOutput("multi_mut_plot"))),
+                            # tabPanel("Patient Summaries", splitLayout(cellWidths = c("50%", "50%"),
+                            #                                           plotOutput("show_patient_status"),
+                            #                                           plotOutput("show_survival_curve"))),
+                            # tabPanel("Summary Plots", splitLayout(cellWidths = c("50%", "50%"),
+                            #                                       plotOutput("multi_num_plot"),
+                            #                                       plotOutput("multi_mut_plot"))),
                             tabPanel("Concept Questions",
                                      h3("QUESTIONS"),
                                      p("1. first question"),
