@@ -24,7 +24,6 @@ DeterminePatientAction <- function(current.map, patient.state, num.surgery,
     patient.action <- GetPatientAction(patient.state, patient.pre.action.set,
                                        patient.post.action.set)
   }
-  # print(patient.action)
   return(patient.action)
 }
 
@@ -164,22 +163,15 @@ RunPatientSimulation <- function(num.rounds, starting.map, mutation.set,
     cell.meet.cond <- CheckPatientDeath(cell.states, mutation.encoding)
     if (length(cell.meet.cond) > round(length(cell.states) * 0.1) && !is.null(cell.meet.cond)) {
       patient.summary.statement <- paste("Patient has died from aggressive, metastastatic tumor at round ", i, ".", sep = "")
-      # cat("round", i, "\n")
-      # print("patient has died")
       # has mutations: E, T, D, G, C, S
       # EMT, telomerase, death inhibition,
       # growth activation, cell cycle, metastasis
-      # print("aggressive tumor has metastasized")
-      # print(cell.states[cell.meet.cond])
       break
     }
     if (sum(current.map$data$value == "Cell") > round(nrow(current.map$data) * 0.80)) {
       tumor.burden.count <- tumor.burden.count + 1
       if (tumor.burden.count >= 3) {
         patient.summary.statement <- paste("Patient has died from high ongoing tumor burden at round ", i, ".", sep = "")
-        # cat("round", i, "\n")
-        # print("patient has died")
-        # print("too much tumor burden")
         break
       }
     }
@@ -193,13 +185,3 @@ RunPatientSimulation <- function(num.rounds, starting.map, mutation.set,
   return(list(current.map, cell.states, cell.divisions, cell.mut.rate,
               round.cell.num, round.average.mut.num, patient.summary.statement))
 }
-
-
-RunMultiSimulation <- function(num.rounds, starting.map, mutation.set,
-                               patient.pre.action.set, patient.post.action.set,
-                               mutation.encoding, cell.mut.rate, map.dim,
-                               cell.divisions, cell.states, max.divisions) {
-
-  # TO BE FILLED IN
-}
-

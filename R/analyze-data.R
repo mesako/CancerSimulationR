@@ -38,8 +38,21 @@ PlotTotalCellNum <- function(all.total.cell.num) {
   return(cell.plot)
 }
 
-PlotMultiPatientSummary <- function() {
-
+PlotMultiPatientSummary <- function(patient.summary.statements) {
+  num.alive <- sum(grepl("alive", patient.summary.statements))
+  num.dead.metastatic <- sum(grepl("metastastatic", patient.summary.statements))
+  num.dead.burden <- sum(grepl("tumor burden", patient.summary.statements))
+  patient.data <- data.frame("Alive" = num.alive,
+                             "Metastatic" = num.dead.metastatic,
+                             "TumorBurden" = num.dead.burden)
+  patient.data <- t(patient.data)
+  patient.data <- cbind(rownames(patient.data), patient.data[, 1])
+  patient.data <- as.data.frame(patient.data)
+  patient.data[, 2] <- as.numeric(as.character(patient.data[, 2]))
+  rownames(patient.data) <- NULL
+  colnames(patient.data) <- c("Status", "NumPatients")
+  patient.plot <- ggplot(patient.data, aes(x = Status, y = NumPatients, fill = Status)) +
+    geom_bar(stat = "identity") + theme(legend.position = "none")
   return(patient.plot)
 }
 

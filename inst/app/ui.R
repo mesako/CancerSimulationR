@@ -42,13 +42,15 @@ ui <- fluidPage(
                                                   min = 1, max = 10, value = 5, step = 1),
                                      numericInput(inputId = "multi_numrounds", label = "Number of Rounds",
                                                   min = 5, max = 100, value = 10, step = 5),
+                                     numericInput(inputId = "multi_numpatients", label = "Number of Patients",
+                                                  min = 2, max = 20, value = 10, step = 2),
                                      actionButton(inputId = "multi_values", label = "Submit Values"),
                                      htmlOutput("show_multi_text"),
                                      actionButton(inputId = "multi_simulate", label = "Run Simulations")),
                         mainPanel(
                           tabsetPanel(
                             tabPanel("Patient Summaries",
-                                     h3("INFO")),
+                                     plotOutput("show_patient_status")),
                             tabPanel("Example Cell Maps", splitLayout(cellWidths = c("50%", "50%"),
                                                                       h3("BOOP"),
                                                                       h3("BOOP"))),
