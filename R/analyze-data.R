@@ -41,3 +41,25 @@ PlotTotalCellNum <- function(all.total.cell.num) {
   return(cell.plot)
 }
 
+PlotMultiPatientSummary <- function() {
+
+  return(patient.plot)
+}
+
+MultiPlotAverageMutNum <- function(all.average.mut.nums) {
+  this.data <- cbind(1:length(all.average.mut.num), all.average.mut.num)
+  this.data <- as.data.frame(this.data)
+  colnames(this.data) <- c("Round", "AvgMutNum")
+  mut.plot <- ggplot(data = this.data, mapping = aes(x = Round, y = AvgMutNum))
+  mut.plot <- mut.plot + geom_point() + geom_line()
+  return(mut.plot)
+}
+
+MultiPlotTotalCellNum <- function(all.total.cell.num) {
+  this.data <- cbind(1:length(all.total.cell.num), all.total.cell.num)
+  this.data <- as.data.frame(this.data)
+  colnames(this.data) <- c("Round", "CellNum")
+  cell.plot <- ggplot(data = this.data, mapping = aes(x = Round, y = CellNum))
+  cell.plot <- cell.plot + geom_point() + geom_line()
+  return(cell.plot)
+}

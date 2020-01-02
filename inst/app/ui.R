@@ -13,7 +13,24 @@ ui <- fluidPage(
                                      actionButton(inputId = "single_values", label = "Submit Values"),
                                      htmlOutput("show_single_text"),
                                      actionButton(inputId = "single_simulate", label = "Run Simulation")),
-                        mainPanel(plotOutput("final_map"))
+                        mainPanel(
+                          tabsetPanel(
+                            tabPanel("Patient Summary",
+                                     h3("INFO")),
+                            tabPanel("Cell Maps", splitLayout(cellWidths = c("50%", "50%"),
+                                                              plotOutput("show_starting_map"),
+                                                              plotOutput("show_final_map"))),
+                            tabPanel("Summary Plots", splitLayout(cellWidths = c("50%", "50%"),
+                                                                  plotOutput("single_num_plot"),
+                                                                  plotOutput("single_mut_plot"))),
+                            tabPanel("Concept Questions",
+                                     h3("QUESTIONS"),
+                                     p("1. first question"),
+                                     p("2. second question"),
+                                     p("3. third question")
+                            )
+                          )
+                        )
                       )
              ),
              tabPanel("Simulate Multiple Patient",
@@ -28,7 +45,25 @@ ui <- fluidPage(
                                      actionButton(inputId = "multi_values", label = "Submit Values"),
                                      htmlOutput("show_multi_text"),
                                      actionButton(inputId = "multi_simulate", label = "Run Simulations")),
-                        mainPanel(plotOutput("summary_plots"))
+                        mainPanel(
+                          tabsetPanel(
+                            tabPanel("Patient Summaries",
+                                     h3("INFO")),
+                            tabPanel("Example Cell Maps", splitLayout(cellWidths = c("50%", "50%"),
+                                                                      h3("BOOP"),
+                                                                      h3("BOOP"))),
+                            tabPanel("Summary Plots", splitLayout(cellWidths = c("50%", "50%"),
+                                                                  h3("BOOP"),
+                                                                  h3("BOOP"))),
+                            tabPanel("Concept Questions",
+                                     h3("QUESTIONS"),
+                                     p("1. first question"),
+                                     p("2. second question"),
+                                     p("3. third question")
+                            )
+                          )
+                        )
+
                       )
              )
   )
