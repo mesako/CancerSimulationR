@@ -17,7 +17,7 @@ ui <- fluidPage(
                                                   min = 5, max = 100, value = 10, step = 5),
                                      actionButton(inputId = "single_values", label = "Submit Values"),
                                      htmlOutput("show_single_text"),
-                                     actionButton(inputId = "single_simulate", label = "Run Simulation")),
+                                     uiOutput("single_sim_button")),
                         mainPanel(
                           tabsetPanel(
                             tabPanel("Patient Summary",
@@ -29,7 +29,6 @@ ui <- fluidPage(
                                                                   plotOutput("single_num_plot"),
                                                                   plotOutput("single_mut_plot"))),
                             tabPanel("Concept Questions",
-                                     # h3("QUESTIONS"),
                                      br(), br(),
                                      p("1. How does changing the different parameters affect the final patient status?"),
                                      p("2. How does changing the different parameters affect the time it takes for the patient to die (if at all)?"),
@@ -53,7 +52,7 @@ ui <- fluidPage(
                                                   min = 2, max = 20, value = 10, step = 2),
                                      actionButton(inputId = "multi_values", label = "Submit Values"),
                                      htmlOutput("show_multi_text"),
-                                     actionButton(inputId = "multi_simulate", label = "Run Simulations")),
+                                     uiOutput("multi_sim_button")),
                         mainPanel(
                           tabsetPanel(
                             tabPanel("Patient Summaries", verticalLayout(
@@ -63,7 +62,6 @@ ui <- fluidPage(
                               plotOutput("multi_num_plot"),
                               plotOutput("multi_mut_plot"))),
                             tabPanel("Concept Questions",
-                                     # h3("QUESTIONS"),
                                      br(), br(),
                                      p("1. How do the different parameters affect the distribution of final patient statuses?"),
                                      p("2. How do the different parameters affect the time it takes for patients to die (if at all)?"),

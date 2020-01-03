@@ -27,6 +27,12 @@ server <- function(input, output) {
     HTML(paste(str0, str1, str2, str3, str4, sep = "<br/>"))
   })
 
+  observeEvent(input$single_values, {
+    output$single_sim_button <- renderUI(
+      actionButton(inputId = "single_simulate", label = "Run Simulation")
+    )
+  })
+
   ### RUN SINGLE SIMULATION
   observeEvent(input$single_simulate, {
     starting_map <<- CancerSimulationR:::GenerateMap(map_dim)
@@ -103,6 +109,12 @@ server <- function(input, output) {
     str4 <- paste("Number of patients to simulate assigned to", multi_text_values$patients)
     str5 <- "<br/>"
     HTML(paste(str0, str1, str2, str3, str4, str5, sep = "<br/>"))
+  })
+
+  observeEvent(input$multi_values, {
+    output$multi_sim_button <- renderUI(
+      actionButton(inputId = "multi_simulate", label = "Run Simulations")
+    )
   })
 
   ### RUN MULTIPLE SIMULATION
