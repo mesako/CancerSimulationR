@@ -1,3 +1,8 @@
+require(shiny)
+require(RColorBrewer)
+require(ggplot2)
+require(reshape)
+require(maps)
 
 ui <- fluidPage(
   navbarPage("Cancer Simulation",
