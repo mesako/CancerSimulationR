@@ -26,6 +26,9 @@ PlotAverageMutNum <- function(all.average.mut.num) {
   colnames(this.data) <- c("Round", "AvgMutNum")
   mut.plot <- ggplot(data = this.data, mapping = aes(x = Round, y = AvgMutNum))
   mut.plot <- mut.plot + geom_point() + geom_line()
+  if (max(this.data$Round) > 20) {
+    mut.plot <- mut.plot + theme(legend.position = "none")
+  }
   return(mut.plot)
 }
 
@@ -35,6 +38,9 @@ PlotTotalCellNum <- function(all.total.cell.num) {
   colnames(this.data) <- c("Round", "CellNum")
   cell.plot <- ggplot(data = this.data, mapping = aes(x = Round, y = CellNum))
   cell.plot <- cell.plot + geom_point() + geom_line()
+  if (max(this.data$Round) > 20) {
+    cell.plot <- cell.plot + theme(legend.position = "none")
+  }
   return(cell.plot)
 }
 
@@ -90,6 +96,9 @@ PlotMultiSurvivalCurve <- function(patient.summary.statements,
     patient.plot <- ggplot(round.data, aes(x = RoundNum, y = NumAlive))
     patient.plot <- patient.plot + geom_point() + geom_line(group = 1)
     patient.plot <- patient.plot + ylim(0, total.num)
+    if (num.rounds > 20) {
+      patient.plot <- patient.plot + theme(axis.text.x = element_blank())
+    }
   }
   return(patient.plot)
 }
@@ -101,12 +110,16 @@ MultiPlotAverageMutNum <- function(all.average.mut.nums) {
   this.data <- as.data.frame(this.data)
   colnames(this.data)[1] <- c("Patient")
   round.num <- sprintf("%02d", 1:ncol(all.average.mut.nums))
-  colnames(this.data)[2:ncol(this.data)] <- paste0("Round", round.num)
+  colnames(this.data)[2:ncol(this.data)] <- round.num
   this.data.m <- melt(this.data, id.vars = "Patient")
+  this.data.m$value <- as.numeric(as.character(this.data.m$value))
   mut.plot <- ggplot(data = this.data.m, mapping = aes(x = variable, y = value,
                                                        group = Patient, color = Patient))
   mut.plot <- mut.plot + geom_point() + geom_line()
   mut.plot <- mut.plot + xlab("Round Number") + ylab("Average Number of Mutations")
+  if (ncol(all.average.mut.nums) > 20) {
+    mut.plot <- mut.plot + theme(axis.text.x = element_blank())
+  }
   return(mut.plot)
 }
 
@@ -116,11 +129,16 @@ MultiPlotTotalCellNum <- function(all.total.cell.nums) {
   this.data <- cbind(paste0("Patient", patient.nums), all.total.cell.nums)
   this.data <- as.data.frame(this.data)
   colnames(this.data)[1] <- c("Patient")
-  colnames(this.data)[2:ncol(this.data)] <- paste0("Round", 1:ncol(all.total.cell.nums))
+  round.num <- sprintf("%02d", 1:ncol(all.total.cell.nums))
+  colnames(this.data)[2:ncol(this.data)] <- round.num
   this.data.m <- melt(this.data, id.vars = "Patient")
+  this.data.m$value <- as.numeric(as.character(this.data.m$value))
   cell.plot <- ggplot(data = this.data.m, mapping = aes(x = variable, y = value,
                                                        group = Patient, color = Patient))
   cell.plot <- cell.plot + geom_point() + geom_line()
   cell.plot <- cell.plot + xlab("Round Number") + ylab("Total Number of Cells")
+  if (ncol(all.total.cell.nums) > 20) {
+    cell.plot <- cell.plot + theme(axis.text.x = element_blank())
+  }
   return(cell.plot)
 }

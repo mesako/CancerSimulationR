@@ -41,8 +41,9 @@ server <- function(input, output) {
 
   patient_status <- eventReactive(input$single_simulate, {
     str0 <- "<br/>"
-    str1 <- single_output[[7]]
-    str2 <- "<br/>"
+    str1 <- paste0(single_output[[8]], collapse = "<br/>")
+    str2 <- single_output[[7]]
+    str3 <- "<br/>"
     paste(str0, str1, str2, sep = "<br/>")
   })
   output$patient_status <- renderUI({
@@ -50,28 +51,30 @@ server <- function(input, output) {
   })
 
   show_starting_map <- eventReactive(input$single_simulate, {
-    print(starting_map)
+    print(starting_map + ggtitle("Starting Cell Map"))
   })
   output$show_starting_map <- renderPlot({
     show_starting_map()
   })
 
   show_final_map <- eventReactive(input$single_simulate, {
-    print(final_map)
+    print(final_map + ggtitle("Final Cell Map"))
   })
   output$show_final_map <- renderPlot({
     show_final_map()
   })
 
   single_num_plot <- eventReactive(input$single_simulate, {
-    print(CancerSimulationR:::PlotTotalCellNum(single_output[[5]]))
+    print(CancerSimulationR:::PlotTotalCellNum(single_output[[5]]) +
+            ggtitle("Number of Cancer Cells in Each Round"))
   })
   output$single_num_plot <- renderPlot({
     single_num_plot()
   })
 
   single_mut_plot <- eventReactive(input$single_simulate, {
-    print(CancerSimulationR:::PlotAverageMutNum(single_output[[6]]))
+    print(CancerSimulationR:::PlotAverageMutNum(single_output[[6]]) +
+            ggtitle("Average Number of Mutations in Each Round"))
   })
   output$single_mut_plot <- renderPlot({
     single_mut_plot()
@@ -124,7 +127,8 @@ server <- function(input, output) {
                                        multi_output[[i]][[7]])
     }
     print(CancerSimulationR:::PlotMultiSurvivalCurve(patient.summary.statements,
-                                                     multi_text_values$rounds))
+                                                     multi_text_values$rounds) +
+            ggtitle("Patient Survival Curve"))
   })
   output$show_survival_curve <- renderPlot({
     show_survival_curve()
@@ -137,7 +141,8 @@ server <- function(input, output) {
       patient.summary.statements <<- c(patient.summary.statements,
                                        multi_output[[i]][[7]])
     }
-    print(CancerSimulationR:::PlotMultiPatientSummary(patient.summary.statements))
+    print(CancerSimulationR:::PlotMultiPatientSummary(patient.summary.statements) +
+            ggtitle("Number of Patients Grouped by Status"))
   })
   output$show_patient_status <- renderPlot({
     show_patient_status()
@@ -147,14 +152,14 @@ server <- function(input, output) {
     all.average.mut.nums <<- c()
     for (i in 1:multi_text_values$patients) {
       temp <- multi_output[[i]][[6]]
-      # print(temp)
       if (length(temp) < multi_text_values$rounds) {
         temp <- c(temp, rep(temp[length(temp)],
-                            times = (ncol(all.average.mut.nums) - length(temp))))
+                            times = (multi_text_values$rounds - length(temp))))
       }
       all.average.mut.nums <<- rbind(all.average.mut.nums, temp)
     }
-    print(CancerSimulationR:::MultiPlotAverageMutNum(all.average.mut.nums))
+    print(CancerSimulationR:::MultiPlotAverageMutNum(all.average.mut.nums)+
+            ggtitle("Average Number of Mutations in Each Round"))
   })
   output$multi_mut_plot <- renderPlot({
     multi_mut_plot()
@@ -166,11 +171,12 @@ server <- function(input, output) {
       temp <- multi_output[[i]][[5]]
       if (length(temp) < multi_text_values$rounds) {
         temp <- c(temp, rep(temp[length(temp)],
-                            times = (ncol(all.total.cell.nums) - length(temp))))
+                            times = (multi_text_values$rounds - length(temp))))
       }
       all.total.cell.nums <<- rbind(all.total.cell.nums, temp)
     }
-    print(CancerSimulationR:::MultiPlotTotalCellNum(all.total.cell.nums))
+    print(CancerSimulationR:::MultiPlotTotalCellNum(all.total.cell.nums) +
+            ggtitle("Number of Cancer Cells in Each Round"))
   })
   output$multi_num_plot <- renderPlot({
     multi_num_plot()

@@ -32,6 +32,7 @@ RunPatientSimulation <- function(num.rounds, starting.map, mutation.set,
                                  mutation.encoding, cell.mut.rate, map.dim,
                                  cell.divisions, cell.states, max.divisions) {
   patient.summary.statement <- ""
+  patient.log <- c()
   num.surgery <- 0
   patient.state <- "pre"
   current.map <- starting.map
@@ -43,6 +44,7 @@ RunPatientSimulation <- function(num.rounds, starting.map, mutation.set,
     patient.action <- DeterminePatientAction(current.map, patient.state, num.surgery,
                                              patient.pre.action.set, patient.post.action.set)
     # print(patient.action)
+    patient.log <- c(patient.log, paste("Round", i, "-", patient.action))
     if (patient.action == "noaction") {
       cell.states <- AddMutations(cell.states, cell.mut.rate,
                                   map.dim, mutation.encoding, mutation.set)
@@ -60,6 +62,9 @@ RunPatientSimulation <- function(num.rounds, starting.map, mutation.set,
       cell.divisions <- results[[3]]
       cell.mut.rate <- results[[4]]
       patient.state <- SwitchPrePost(cell.states, current.map, mutation.encoding)
+      if (patient.state == "post") {
+        patient.log <- c(patient.log, paste("Round", i, "-", "patient diagnosed with cancer"))
+      }
     } else if (patient.action == "smoke" | patient.action == "asbestos" | patient.action == "radexpose") {
       temp.cell.mut.rate <- cell.mut.rate * 20
       cell.states <- AddMutations(cell.states, temp.cell.mut.rate,
@@ -166,12 +171,14 @@ RunPatientSimulation <- function(num.rounds, starting.map, mutation.set,
       # has mutations: E, T, D, G, C, S
       # EMT, telomerase, death inhibition,
       # growth activation, cell cycle, metastasis
+      patient.log <- c(patient.log, paste("Round", i, "-", "patient died"))
       break
     }
     if (sum(current.map$data$value == "Cell") > round(nrow(current.map$data) * 0.80)) {
       tumor.burden.count <- tumor.burden.count + 1
       if (tumor.burden.count >= 3) {
         patient.summary.statement <- paste("Patient has died from high ongoing tumor burden at round ", i, ".", sep = "")
+        patient.log <- c(patient.log, paste("Round", i, "-", "patient died"))
         break
       }
     }
@@ -183,5 +190,6 @@ RunPatientSimulation <- function(num.rounds, starting.map, mutation.set,
                                GetAverageMutationNum(cell.states, GetCellNumbers(current.map)))
   }
   return(list(current.map, cell.states, cell.divisions, cell.mut.rate,
-              round.cell.num, round.average.mut.num, patient.summary.statement))
+              round.cell.num, round.average.mut.num, patient.summary.statement,
+              patient.log))
 }
