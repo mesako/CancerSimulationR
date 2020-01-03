@@ -4,3 +4,6 @@
 .svn/
 .svn/
 .Rbuildignore
+token.mat
+app/rsconnect
+inst/app/rsconnect

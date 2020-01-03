@@ -1,8 +1,8 @@
-require(shiny)
-require(RColorBrewer)
-require(ggplot2)
-require(reshape)
-require(maps)
+library(shiny)
+library(RColorBrewer)
+library(ggplot2)
+library(reshape)
+library(maps)
 
 server <- function(input, output) {
   ### SIMULATE SINGLE PATIENT
