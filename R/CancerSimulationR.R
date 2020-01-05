@@ -9,4 +9,5 @@
 #' @import ggplot2
 #' @import reshape
 #' @import RColorBrewer
+#' @import maps
 NULL

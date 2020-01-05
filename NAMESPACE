@@ -3,5 +3,6 @@
 export(LaunchGUI)
 import(RColorBrewer)
 import(ggplot2)
+import(maps)
 import(reshape)
 import(shiny)
